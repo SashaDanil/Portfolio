@@ -1,2 +1,426 @@
+// ============================================================
+// Коридор с фигурами и легендой (стиль интерфейса)
+// Для POV-Ray 3.7+
+// ============================================================
 
-asdf
+#version 3.7;
+
+global_settings {
+    assumed_gamma 1.0
+    ambient_light rgb <0.4,0.4,0.5>
+    max_trace_level 10
+}
+
+// Камера: вид из центра коридора в глубину (POV ray effect)
+camera {
+    perspective
+    location  <0.0, 1.2, -3.5>
+    look_at   <0.0, 0.8, 5.0>
+    right     x * image_width / image_height
+    angle     75
+}
+
+// Освещение
+light_source {
+    <5, 8, -5>
+    color rgb <1.2, 1.1, 1.0>
+    shadowless
+}
+
+light_source {
+    <-3, 4, 2>
+    color rgb <0.8, 0.9, 1.0>
+}
+
+light_source {
+    <0, 3, 6>
+    color rgb <0.6, 0.6, 0.7>
+}
+
+// Лёгкая заполняющая подсветка сзади
+light_source {
+    <0, 2, 10>
+    color rgb <0.4, 0.45, 0.6>
+    shadowless
+}
+
+// ========== МАТЕРИАЛЫ ==========
+#declare mat_floor = material {
+    texture {
+        pigment { color rgb <0.22, 0.24, 0.28> }
+        normal { bumps 0.3 scale 0.5 }
+        finish { diffuse 0.7 specular 0.4 roughness 0.05 }
+    }
+}
+
+#declare mat_wall = material {
+    texture {
+        pigment { gradient y
+            pigment_map {
+                [0.0 color rgb <0.35, 0.38, 0.44>]
+                [0.5 color rgb <0.42, 0.45, 0.52>]
+                [1.0 color rgb <0.48, 0.51, 0.58>]
+            }
+            scale <1, 2.5, 1>
+        }
+        finish { diffuse 0.65 specular 0.3 }
+    }
+}
+
+#declare mat_ceiling = material {
+    texture {
+        pigment { color rgb <0.55, 0.58, 0.65> }
+        finish { diffuse 0.8 ambient 0.1 }
+    }
+}
+
+#declare mat_red_accent = material {
+    texture {
+        pigment { color rgb <0.85, 0.32, 0.28> }
+        finish { diffuse 0.6 specular 0.5 roughness 0.02 }
+    }
+}
+
+#declare mat_blue_accent = material {
+    texture {
+        pigment { color rgb <0.25, 0.55, 0.85> }
+        finish { diffuse 0.65 specular 0.45 }
+    }
+}
+
+#declare mat_green_accent = material {
+    texture {
+        pigment { color rgb <0.35, 0.75, 0.55> }
+        finish { diffuse 0.7 specular 0.4 }
+    }
+}
+
+#declare mat_yellow_accent = material {
+    texture {
+        pigment { color rgb <0.95, 0.75, 0.25> }
+        finish { diffuse 0.6 specular 0.5 }
+    }
+}
+
+#declare mat_dark_panel = material {
+    texture {
+        pigment { color rgb <0.15, 0.17, 0.22> }
+        finish { diffuse 0.5 specular 0.6 roughness 0.01 }
+    }
+}
+
+#declare mat_glass = material {
+    texture {
+        pigment { color rgbt <0.9, 0.95, 1.0, 0.75> }
+        finish { diffuse 0.2 specular 0.9 reflection 0.1 }
+    }
+}
+
+// ========== КОРИДОР ==========
+// Пол
+box {
+    <-4, -0.05, -2>, <4, 0, 12>
+    material { mat_floor }
+}
+
+// Потолок
+box {
+    <-4, 2.4, -2>, <4, 2.45, 12>
+    material { mat_ceiling }
+}
+
+// Левая стена
+box {
+    <-4, 0, -2>, <-3.85, 2.4, 12>
+    material { mat_wall }
+}
+
+// Правая стена
+box {
+    <3.85, 0, -2>, <4, 2.4, 12>
+    material { mat_wall }
+}
+
+// Боковые панели-пилоны для глубины (интервалы)
+#declare pillar_pos = array[7] {0.5, 1.8, 3.2, 4.6, 6.2, 8.0, 10.0}
+#for(i, 0, 6)
+    // Левый пилон
+    box {
+        <-4, 0, pillar_pos[i]-0.15>, <-3.5, 2.0, pillar_pos[i]+0.15>
+        material { mat_dark_panel }
+    }
+    // Правый пилон
+    box {
+        <3.5, 0, pillar_pos[i]-0.15>, <4, 2.0, pillar_pos[i]+0.15>
+        material { mat_dark_panel }
+    }
+    // Горизонтальная перемычка (верх)
+    box {
+        <-3.6, 1.95, pillar_pos[i]-0.12>, <3.6, 2.05, pillar_pos[i]+0.12>
+        material { mat_blue_accent }
+    }
+#end
+
+// ========== ФИГУРЫ В КОРИДОРЕ ==========
+// Круг (сфера) на пьедестале слева, ближний план
+union {
+    cylinder { < -2.2, 0, 0.8 >, < -2.2, 0.4, 0.8 >, 0.35 }
+    sphere { < -2.2, 0.8, 0.8 >, 0.45 }
+    pigment { color rgb <0.95, 0.45, 0.25> }
+    finish { specular 0.7 roughness 0.05 }
+}
+
+// Квадрат (куб) справа, ближний план
+box {
+    <-0.8, 0, 1.2>, <0, 0.8, 2.0>
+    material { mat_blue_accent }
+    rotate <0, 15, 0>
+}
+
+// Треугольник (призма) в центре на полу
+prism {
+    linear_sweep
+    linear_spline
+    0, 0.6, 4
+    <0.5, 0>, <1.2, 0.9>, < -0.2, 0.9>
+    translate <0.3, 0, 3.5>
+    material { mat_green_accent }
+}
+
+// Дополнительные фигуры в глубине (создают ритм)
+// Красный куб дальше
+box {
+    <-1.5, 0, 6.2>, <-0.7, 0.7, 7.0>
+    material { mat_red_accent }
+}
+
+// Сфера в глубине справа
+sphere {
+    <1.6, 0.55, 7.8>, 0.5
+    material { mat_yellow_accent }
+}
+
+// Ещё один треугольник (призма) далеко
+prism {
+    linear_sweep
+    linear_spline
+    0, 0.5, 4
+    <0, 0>, <0.9, 0.5>, <0.3, 1.0>
+    translate < -1.8, 0, 9.2 >
+    material { mat_green_accent }
+    rotate <0, 25, 0>
+}
+
+// ========== ПАНЕЛЬ "ЛЕГЕНДА" НА СТЕНЕ ==========
+// Текстовая табличка на правой стене (ближе к камере)
+union {
+    box {
+        <3.86, 1.2, 0.3>, <3.98, 1.9, 1.2>
+        material { mat_glass }
+    }
+    // Эмуляция текста через мелкие объекты (так как POV-Ray не рендерит шрифт без external)
+    // Вместо этого — цветные полоски, символизирующие легенду
+    #local legend_colors = array[4] {<0.9,0.3,0.2>, <0.2,0.6,0.9>, <0.2,0.8,0.4>, <0.95,0.8,0.2>}
+    #for(j,0,3)
+        box {
+            <3.88, 1.35 + j*0.12, 0.45>, <3.96, 1.42 + j*0.12, 0.55>
+            pigment { color legend_colors[j] }
+            finish { specular 0.4 }
+        }
+    #end
+    // Символы фигур (маленькие примитивы)
+    sphere { <3.92, 1.32, 0.65>, 0.04 pigment { rgb <1,0.9,0.4> } }
+    box { <3.89, 1.44, 0.65>, <3.95, 1.50, 0.68> pigment { rgb <0.4,0.8,1> } }
+    prism { linear_sweep linear_spline 0,0.05,4 <0,0>,<0.04,0.04>,<0.02,0.07> translate <3.91, 1.56, 0.66> pigment { rgb <0.5,1,0.4> } }
+}
+
+// ========== ТЕКСТОВЫЕ ЭЛЕМЕНТЫ (ЧЕРЕЗ text OBJECT) ==========
+// Требуется шрифт .ttf. Если шрифт недоступен, POV-Ray использует встроенный.
+// Убедитесь, что файл "arial.ttf" существует или измените путь.
+// Для кросс-платформенности: используем стандартный "cyrvetic.ttf" (часто встроен)
+// или "times.ttf". Добавим несколько текстовых меток.
+
+#declare font_name = "times.ttf"  // или "arial.ttf"
+
+// Заголовок "ФИГУРЫ" на левой стене
+text {
+    ttf font_name "ФИГУРЫ" 0.08, 0
+    <3.95, 1.05, -0.8>  // снаружи стены — немного вперёд
+    scale 0.45
+    pigment { rgb <0.95, 0.9, 0.75> }
+    finish { specular 0.3 }
+    rotate <0, -90, 0>
+    translate < -3.9, 1.15, 0.2 >
+}
+
+// Текст "LEGENDA" над панелью
+text {
+    ttf font_name "LEGENDA" 0.07, 0
+    <0,0,0>
+    scale 0.35
+    pigment { rgb <0.85, 0.82, 0.7> }
+    rotate <0, 0, 0>
+    translate <3.7, 2.0, 0.75>
+}
+
+// ========== ЭЛЕМЕНТЫ ИНТЕРФЕЙСА (стилизованные кнопки) ==========
+// Размещаем их как плавающие панели в воздухе (эффект голографического интерфейса)
+
+#declare btn_labels = array[7] {
+    "Privacy", "Security", "Status", "Community", "Docs", "Contact", "Manage cookies"
+}
+
+#for(k, 0, 6)
+    #local x_pos = -2.8 + k * 0.95;
+    #if(x_pos > 2.8)
+        #local x_pos = x_pos - 5.6;
+    #end
+    #local z_pos = 3.2 + floor(k/4)*1.2;
+    #local y_base = 1.85;
+
+    // Прямоугольник-кнопка
+    box {
+        <x_pos - 0.4, y_base, z_pos - 0.05>,
+        <x_pos + 0.4, y_base + 0.25, z_pos + 0.05>
+        material {
+            texture {
+                pigment { color rgb <0.2, 0.22, 0.28> }
+                finish { diffuse 0.4 specular 0.6 reflection 0.05 }
+            }
+        }
+    }
+
+    // Текст на кнопке
+    text {
+        ttf font_name btn_labels[k] 0.05, 0
+        <0,0,0>
+        scale 0.22
+        pigment { rgb <0.9, 0.9, 0.95> }
+        translate <x_pos - 0.28, y_base + 0.07, z_pos + 0.06>
+    }
+#end
+
+// Дополнительная панель "Do not track" и "Manage cookies" ниже
+union {
+    box {
+        <-1.2, 0.25, 0.45>, <1.2, 0.55, 0.65>
+        material { mat_dark_panel }
+    }
+    text {
+        ttf font_name "Do not track" 0.05, 0
+        scale 0.2
+        pigment { rgb <0.8,0.8,0.9> }
+        translate <-0.95, 0.33, 0.52>
+    }
+    text {
+        ttf font_name "Manage cookies" 0.05, 0
+        scale 0.2
+        pigment { rgb <0.8,0.8,0.9> }
+        translate <0.1, 0.33, 0.52>
+    }
+}
+
+// ========== ДЕКОРАТИВНЫЕ ЛУЧИ (POV RAY EFFECT) ==========
+// Создаём эффект объёмных лучей, проходящих через коридор
+#declare light_beam = union {
+    #local i = 0;
+    #while(i < 12)
+        cylinder {
+            < -0.5 + i*0.3, -0.2, -1 >,
+            < -0.5 + i*0.3 + 0.2, 2.2, 9 >,
+            0.03
+            pigment { rgbt <1.0, 0.95, 0.85, 0.85> }
+            finish { emission 0.4 }
+        }
+        #local i = i + 1;
+    #end
+}
+
+object { light_beam }
+
+// Дополнительные рассеянные лучи от центра
+#declare rays = union {
+    #local ang = 0;
+    #while(ang < 360)
+        cylinder {
+            <0, 0.6, -1>,
+            <sin(radians(ang))*1.5, 0.8 + cos(radians(ang*2))*0.4, 7>,
+            0.02
+            pigment { rgbt <1,0.9,0.6,0.92> }
+            finish { emission 0.3 }
+        }
+        #local ang = ang + 30;
+    #end
+}
+
+object { rays }
+
+// ========== ПОЛ И ПОТОЛОК С РАЗМЕТКОЙ (полосы) ==========
+// Создаём динамические линии на полу для ощущения скорости
+#declare line_z = -1;
+#while(line_z < 12)
+    box {
+        <-0.1, 0.001, line_z>, <0.1, 0.02, line_z + 0.35>
+        pigment { rgb <0.7, 0.75, 0.85> }
+        finish { specular 0.5 }
+    }
+    #local line_z = line_z + 0.85;
+#end
+
+// Боковые светодиодные ленты
+#declare led_z = -1.5;
+#while(led_z < 11.5)
+    box {
+        <-3.95, 0.45, led_z>, <-3.85, 0.55, led_z + 0.2>
+        pigment { rgb <0.3, 0.9, 0.95> }
+        finish { emission 0.6 }
+    }
+    box {
+        <3.85, 0.45, led_z>, <3.95, 0.55, led_z + 0.2>
+        pigment { rgb <0.3, 0.9, 0.95> }
+        finish { emission 0.6 }
+    }
+    #local led_z = led_z + 0.65;
+#end
+
+// ========== ЗЕРКАЛЬНЫЙ ЭЛЕМЕНТ В КОНЦЕ КОРИДОРА ==========
+box {
+    <-3.5, 0.4, 11.7>, <3.5, 2.1, 11.85>
+    pigment { rgbt <0.9, 0.92, 1.0, 0.3> }
+    finish { reflection 0.7 diffuse 0.1 }
+}
+
+// ========== НЕБОЛЬШИЕ ФИГУРЫ В ВОЗДУХЕ (ПАРЯЩИЕ) ==========
+sphere {
+    < -1.2, 1.4, 4.5 >, 0.18
+    pigment { rgb <0.95, 0.4, 0.7> }
+    finish { specular 0.8 }
+}
+box {
+    < 1.3, 1.2, 5.0 >, < 1.65, 1.6, 5.35 >
+    pigment { rgb <0.5, 0.7, 0.95> }
+    rotate <20, 30, 10>
+}
+cylinder {
+    < -0.5, 1.3, 7.2 >, < -0.1, 1.7, 7.2 >, 0.12
+    pigment { rgb <0.9, 0.8, 0.2> }
+}
+
+// ========== ТЕНЬ И ФИНАЛЬНЫЕ ШТРИХИ ==========
+// Плоскость для теней (уже есть пол, но добавим невидимый сборщик)
+// Просто для атмосферы — лёгкий туман
+fog {
+    distance 25
+    color rgb <0.5, 0.55, 0.65>
+    fog_type 2
+    fog_offset 1
+    fog_alt 0.5
+}
+
+// background
+background { color rgb <0.08, 0.09, 0.12> }
+
+// ============================================================
+// Конец сцены. 
+// Рекомендации: используйте разрешение 1920x1080, антиалиасинг 0.3
+// ============================================================
